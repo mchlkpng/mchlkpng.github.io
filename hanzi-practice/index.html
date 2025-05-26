@@ -1,1 +1,192 @@
-hi
+<html>
+    <head>
+        <header>
+            <h1>
+                Hanzi Practice
+            </h1>
+        </header>
+        <style>
+            input.checkbox {
+                width:20px;
+                height:20px;
+                vertical-align: middle;
+            }
+            div.hanzi {
+                border:5px solid grey;
+                border-top:10px solid grey;
+                border-bottom: 10px solid grey;
+            }
+            div.hanzi#hanzi-target1 {
+                border-left:10px solid grey;
+            }
+            button.next {
+                width:100px;
+                height:40px;
+                margin:20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div>
+            <h2>
+                Input Hanzi for practice (seperate with newline)
+            </h2>
+            <textarea id="hanzi-input" rows="7" cols="75" style="resize:none;vertical-align:middle;font-size:20px;"></textarea>
+            Randomize &nbsp;<input id="randomize" type="checkbox" class="checkbox">
+            <button onclick="startQuiz()" style="width:100px;height:50px;font-size:20px;margin-left:20px;margin-top:-50px;">Start</button>
+        </div>
+        <br>
+        <hr>
+        <div style="justify-content:center;">
+                <br>
+                <p id="quiz-index" style="font-size:20px">0.</p>
+                <p id="pinyin-text" style="font-size:30px;text-align: center;left:50%;top:20px"></p>
+                <div style="display:flex;justify-content:center;align-items:center;">
+                    <button class="next" onclick="goBack()">Back</button> &nbsp;
+                    <div class="hanzi" id="hanzi-target1"></div>
+                    <div class="hanzi" id="hanzi-target2"></div>
+                    <div class="hanzi" id="hanzi-target3"></div>
+                    <button class="next" onclick="goForward()">Forward</button>
+                </div>
+        </div>
+
+        <br>
+
+        <div style="font-size:20px;vertical-align: middle;">
+            Show outline&nbsp;<input id="show-outline" class="checkbox"type="checkbox" checked="true" onchange="showOutline(this.checked)"> <br>
+            <button onclick="resetWriters()" style="width:100px;height:50px;font-size:20px;">Reset</button>
+        </div>
+        <div style="width:4px;height:500px;">
+            
+        </div>
+        <script>
+            function setCookie(cname, cvalue, exdays) {
+                const d = new Date();
+                d.setTime(d.getTime() + (exdays*24*60*60*1000));
+                let expires = "expires="+ d.toUTCString();
+                document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+            }
+            function getCookie(cname) {
+                let name = cname + "=";
+                let decodedCookie = decodeURIComponent(document.cookie);
+                let ca = decodedCookie.split(';');
+                for(let i = 0; i <ca.length; i++) {
+                    let c = ca[i];
+                    while (c.charAt(0) == ' ') {
+                    c = c.substring(1);
+                    }
+                    if (c.indexOf(name) == 0) {
+                    return c.substring(name.length, c.length);
+                    }
+                }
+                return "";
+            }
+        </script>
+        <script src="./hanzi-writer.js"></script>
+        <script src="./pinyin4js.js" type="module"></script>
+        <script>
+            let writer,writer2,writer3;
+            function showOutline(show) {
+                if (!writer) {return}
+                if (show) {
+                    try {
+                        writer.showOutline();
+                        writer2.showOutline();
+                        writer3.showOutline();
+                    } catch(e) {}
+                } else {
+                    try{
+                        writer.hideOutline();
+                        writer2.hideOutline();
+                        writer3.hideOutline();
+                    } catch (e) {}
+                }
+            }
+            
+            function resetWriters() {
+                if (!writer) {return}
+                makeQuiz(words[quizIndex]);
+            }
+            function makeQuiz(chars, showCar) {
+                
+                let settings = {
+                    width: 200,
+                    height: 200,
+                    padding: 0,
+                    strokeColor: "#030000"
+                }
+                let charAr = chars.substring(0, 3).split("");
+                for (let i = 1; i <= 3; i++) {
+                    let el = document.getElementById("hanzi-target"+i);
+                    el.innerHTML = "";
+                    if (i > charAr.length) {
+                        el.style.border = "none";
+                    } else {
+                        el.style.border = "";
+                    }
+                    
+                }
+                writer = HanziWriter.create("hanzi-target1", charAr[0], settings);
+                writer.quiz();
+                if (charAr[1]) {
+                    writer2 = HanziWriter.create("hanzi-target2", charAr[1], settings);
+                    writer2.quiz();
+                }
+                if (charAr[2]) {
+                    writer3 = HanziWriter.create("hanzi-target3", charAr[2], settings);
+                    writer3.quiz();
+                }
+                showOutline(document.getElementById("show-outline").checked)
+                document.getElementById("pinyin-text").innerHTML = PinyinHelper.convertToPinyinString(chars, " ", PinyinFormat.WITH_TONE_MARK);
+                document.getElementById("hanzi-target"+charAr.length).style.borderRight = "10px solid grey";
+            }
+        </script>
+
+        <script>
+            let quizIndex = 1;
+            let words;
+            let emcook = getCookie("words");
+            document.getElementById("hanzi-input").value = emcook.split(",").join("\n");
+            function startQuiz() {
+                let h = document.getElementById("hanzi-input").value;
+                quizIndex = 0;
+
+                setCookie("words", h.split(/\s/).join(","), 20);
+
+                words = h.split(/\s/);
+                if (document.getElementById("randomize").checked) {
+                    let rwords = [];
+                    for(let i = 0; i < words.length + rwords.length; i++) {
+                        let index = Math.floor(Math.random()*words.length);
+                        let el = words[index];
+                        rwords.push(el);
+                        words.splice(index, 1);
+                    }
+                    words = rwords;
+                }
+                makeQuiz(words[quizIndex]);
+                displayQuizIndex();
+            }
+
+            function goBack() {
+                if (quizIndex > 1) {
+                    quizIndex--;
+                    displayQuizIndex();
+                    makeQuiz(words[quizIndex]);
+                }
+            }
+            function goForward() {
+                if (quizIndex < words.length) {
+                    quizIndex++;
+                    displayQuizIndex();
+                    makeQuiz(words[quizIndex]);
+                }
+            }
+            function displayQuizIndex() {
+                document.getElementById("quiz-index").innerHTML = (quizIndex+1) + "."
+            }
+        </script>
+
+
+    </body>
+</html>
