@@ -46,6 +46,7 @@
                     <div class="hanzi" id="hanzi-target1"></div>
                     <div class="hanzi" id="hanzi-target2"></div>
                     <div class="hanzi" id="hanzi-target3"></div>
+                    <div class="hanzi" id="hanzi-target4"></div>
                     <button class="next" onclick="goForward()">Forward</button>
                 </div>
         </div>
@@ -115,8 +116,8 @@
                     padding: 0,
                     strokeColor: "#030000"
                 }
-                let charAr = chars.substring(0, 3).split("");
-                for (let i = 1; i <= 3; i++) {
+                let charAr = chars.substring(0, 4).split("");
+                for (let i = 1; i <= 4; i++) {
                     let el = document.getElementById("hanzi-target"+i);
                     el.innerHTML = "";
                     if (i > charAr.length) {
@@ -135,6 +136,10 @@
                 if (charAr[2]) {
                     writer3 = HanziWriter.create("hanzi-target3", charAr[2], settings);
                     writer3.quiz();
+                }
+                if (charAr[3]) {
+                    writer4 = HanziWriter.create("hanzi-target4", charAr[3], settings);
+                    writer4.quiz();
                 }
                 showOutline(document.getElementById("show-outline").checked)
                 document.getElementById("pinyin-text").innerHTML = PinyinHelper.convertToPinyinString(chars, " ", PinyinFormat.WITH_TONE_MARK);
