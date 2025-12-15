@@ -86,7 +86,7 @@
         <script src="./hanzi-writer.js"></script>
         <script src="./pinyin4js.js" type="module"></script>
         <script>
-            let writer,writer2,writer3;
+            let writer,writer2,writer3,writer4;
             function showOutline(show) {
                 if (!writer) {return}
                 if (show) {
@@ -94,12 +94,14 @@
                         writer.showOutline();
                         writer2.showOutline();
                         writer3.showOutline();
+                        writer4.showOutline();
                     } catch(e) {}
                 } else {
                     try{
                         writer.hideOutline();
                         writer2.hideOutline();
                         writer3.hideOutline();
+                        writer4.hideOutline();
                     } catch (e) {}
                 }
             }
