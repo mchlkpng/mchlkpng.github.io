@@ -1,8 +1,10 @@
 <html>
     <head>
+        <title>Hanzi/Kanji Practice</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-16">
         <header>
             <h1>
-                Hanzi Practice
+                Hanzi/Kanji Practice
             </h1>
         </header>
         <style>
@@ -29,13 +31,19 @@
     <body>
         <div>
             <h2>
-                Input Hanzi for practice (seperate with newline)
+                Input  汉/漢字 for practice (seperate with newline)
             </h2>
+            <input type="radio" id="chinese" name="language" value="zh" checked="true">
+            <label for="chinese">中文</label>
+            <input type="radio" id="japanese" name="language" value="ja">
+            <label for="japanese">日本語</label>
+            <br><br>
             <textarea id="hanzi-input" rows="7" cols="75" style="resize:none;vertical-align:middle;font-size:20px;"></textarea>
             Randomize &nbsp;<input id="randomize" type="checkbox" class="checkbox">
-            <button onclick="startQuiz()" style="width:100px;height:50px;font-size:20px;margin-left:20px;margin-top:-50px;">Start</button>
+            <br>
+            <br>
+            <button onclick="startQuiz()" style="width:100px;height:50px;font-size:20px">Start</button>
         </div>
-        <br>
         <hr>
         <div style="justify-content:center;">
                 <br>
@@ -119,6 +127,7 @@
                     strokeColor: "#030000"
                 }
                 let charAr = chars.substring(0, 4).split("");
+                let oldchar = chars;
                 for (let i = 1; i <= 4; i++) {
                     let el = document.getElementById("hanzi-target"+i);
                     el.innerHTML = "";
@@ -129,36 +138,97 @@
                     }
                     
                 }
-                writer = HanziWriter.create("hanzi-target1", charAr[0], settings);
-                writer.quiz();
-                if (charAr[1]) {
-                    writer2 = HanziWriter.create("hanzi-target2", charAr[1], settings);
-                    writer2.quiz();
-                }
-                if (charAr[2]) {
-                    writer3 = HanziWriter.create("hanzi-target3", charAr[2], settings);
-                    writer3.quiz();
-                }
-                if (charAr[3]) {
-                    writer4 = HanziWriter.create("hanzi-target4", charAr[3], settings);
-                    writer4.quiz();
+
+                if (lang == "zh") {
+                    writer = HanziWriter.create("hanzi-target1", charAr[0], settings);
+                    writer.quiz();
+                    if (charAr[1]) {
+                        writer2 = HanziWriter.create("hanzi-target2", charAr[1], settings);
+                        writer2.quiz();
+                    }
+                    if (charAr[2]) {
+                        writer3 = HanziWriter.create("hanzi-target3", charAr[2], settings);
+                        writer3.quiz();
+                    }
+                    if (charAr[3]) {
+                        writer4 = HanziWriter.create("hanzi-target4", charAr[3], settings);
+                        writer4.quiz();
+                    }
+                document.getElementById("pinyin-text").innerHTML = PinyinHelper.convertToPinyinString(chars, " ", PinyinFormat.WITH_TONE_MARK);
+                } else if (lang == "ja") {
+                    settings.charDataLoader = function(char, onLoad, onError) {
+                        fetch(`./jpdata/${char}.json`)
+                        .then(res => res.json())
+                        .then(onLoad)
+                        .catch(onError);
+                    }
+                    
+                    while (chars.search(/[\u3040-\u309F\u30A0-\u30FF]/g) != -1) {
+                        let spot = chars.search(/[\u3040-\u309F\u30A0-\u30FF]/g);
+                        chars = chars.substring(0, spot) + chars.substring(spot+1, chars.length);
+                    }
+                    charAr = chars.substring(0, 4).split("");
+                    for (let i = 1; i <= 4; i++) {
+                        let el = document.getElementById("hanzi-target"+i);
+                        el.innerHTML = "";
+                        if (i > charAr.length) {
+                            el.style.border = "none";
+                        } else {
+                            el.style.border = "";
+                        }
+                        
+                    }
+                    writer = HanziWriter.create("hanzi-target1", charAr[0], settings);
+                    writer.quiz();
+                    if (charAr[1]) {
+                        writer2 = HanziWriter.create("hanzi-target2", charAr[1], settings);
+                        writer2.quiz();
+                    }
+                    if (charAr[2]) {
+                        writer3 = HanziWriter.create("hanzi-target3", charAr[2], settings);
+                        writer3.quiz();
+                    }
+                    if (charAr[3]) {
+                        writer4 = HanziWriter.create("hanzi-target4", charAr[3], settings);
+                        writer4.quiz();
+                    }
+                    
+                    document.getElementById("pinyin-text").innerHTML = toHira[oldchar];
                 }
                 showOutline(document.getElementById("show-outline").checked)
-                document.getElementById("pinyin-text").innerHTML = PinyinHelper.convertToPinyinString(chars, " ", PinyinFormat.WITH_TONE_MARK);
                 document.getElementById("hanzi-target"+charAr.length).style.borderRight = "10px solid grey";
             }
         </script>
 
         <script>
+            let toHira
             let quizIndex = 1;
             let words;
             let emcook = getCookie("words");
+            let lang = getCookie("language");
             document.getElementById("hanzi-input").value = emcook.split(",").join("\n");
+            let langrads = document.getElementsByName("language");
+            for (let i = 0; i < langrads.length; i++) {
+                if (lang == langrads[i].value) {
+                    langrads[i].checked = true;
+                } else {
+                    langrads[i].checked = false;
+                }
+            }
+            if (lang != "zh" && lang != "ja") {langrads[0].checked = true;}
             function startQuiz() {
                 let h = document.getElementById("hanzi-input").value;
                 quizIndex = 0;
 
-                setCookie("words", h.split(/\s/).join(","), 20);
+                if (langrads[0].checked) {
+                    lang = langrads[0].value;
+                } else {
+                    lang = langrads[1].value;
+                }
+
+
+                setCookie("words", h.split(/\s/).join(","), 500);
+                setCookie("language", lang);
 
                 words = h.split(/\s/);
                 if (document.getElementById("randomize").checked) {
@@ -176,14 +246,14 @@
             }
 
             function goBack() {
-                if (quizIndex > 1) {
+                if (quizIndex > 0) {
                     quizIndex--;
                     displayQuizIndex();
                     makeQuiz(words[quizIndex]);
                 }
             }
             function goForward() {
-                if (quizIndex < words.length) {
+                if (quizIndex < words.length-1) {
                     quizIndex++;
                     displayQuizIndex();
                     makeQuiz(words[quizIndex]);
@@ -192,6 +262,11 @@
             function displayQuizIndex() {
                 document.getElementById("quiz-index").innerHTML = (quizIndex+1) + "."
             }
+            fetch("./kanjToHira.json")
+            .then(res => res.json())
+            .then(data => {
+                toHira = data;
+            })
         </script>
 
 
